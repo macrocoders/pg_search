@@ -4,7 +4,7 @@ module PgSearch
   module Features
     class TSearch < Feature # rubocop:disable Metrics/ClassLength
       def self.valid_options
-        super + [:dictionary, :prefix, :negation, :any_word, :normalization, :tsvector_column, :highlight]
+        super + [:dictionary, :prefix, :negation, :any_word, :ts_rank_cd, :normalization, :tsvector_column, :highlight]
       end
 
       def conditions
@@ -14,7 +14,9 @@ module PgSearch
       end
 
       def rank
-        arel_wrap(tsearch_rank)
+        return arel_wrap(tsearch_rank) unless options[:ts_rank_cd] == true
+
+        arel_wrap(tsearch_rank_cd)
       end
 
       def highlight
@@ -118,6 +120,10 @@ module PgSearch
 
       def tsearch_rank
         "ts_rank((#{tsdocument}), (#{tsquery}), #{normalization})"
+      end
+
+      def tsearch_rank_cd
+        "ts_rank_cd((#{tsdocument}), (#{tsquery}), #{normalization})"
       end
 
       def dictionary
